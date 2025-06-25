@@ -1,7 +1,16 @@
 
 const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
-async function fetchApi(userInput: string): Promise<any> {
+async function fetchApi(userInput: string, mode: 'rewrite' | 'question'): Promise<any> {
+
+
+    const systemPrompt = mode === 'rewrite'
+    ? 'You are a helpful writing assistant that rewrites text for clarity and conciseness.'
+    : 'You are a helpful assistant that answers user questions directly.';
+
+    const userPrompt = mode === 'rewrite'
+        ? `Please rewrite the following text to improve clarity and flow:\n\n${userInput}`
+        : userInput;
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -14,8 +23,12 @@ async function fetchApi(userInput: string): Promise<any> {
                 model: 'gpt-4o',
                 messages: [
                     {
+                        role: 'system',
+                        content: systemPrompt,
+                    },
+                    {
                         role: 'user',
-                        content: userInput,
+                        content: userPrompt,
                     },
                 ],
             }),
