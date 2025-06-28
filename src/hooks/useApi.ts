@@ -1,16 +1,36 @@
 
 const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
-async function fetchApi(userInput: string, mode: 'rewrite' | 'question'): Promise<any> {
+function getSystemPrompt(mode: 'rewrite' | 'question' | 'suggestion'): string {
+    switch (mode) {
+        case 'rewrite':
+            return 'You are a helpful writing assistant that rewrites text for clarity and conciseness.';
+        case 'question':
+            return 'You are a helpful assistant that answers user questions directly.';
+        case 'suggestion':
+            return 'You are a helpful assistant that suggests improvements to text for clarity and conciseness.';
+        default:
+            throw new Error('Unknown mode');
+    }
+}
 
+function getUserPrompt(mode: 'rewrite' | 'question' | 'suggestion', userInput: string): string {
+    switch (mode) {
+        case 'rewrite':
+            return `Please rewrite the following text to improve clarity and flow:\n\n${userInput}`;
+        case 'question':
+            return userInput;
+        case 'suggestion':
+            return `Please suggest improvements to the following text to improve clarity and flow:\n\n${userInput}`;
+        default:
+            throw new Error('Unknown mode');
+    }
+}
 
-    const systemPrompt = mode === 'rewrite'
-    ? 'You are a helpful writing assistant that rewrites text for clarity and conciseness.'
-    : 'You are a helpful assistant that answers user questions directly.';
+async function fetchApi(userInput: string, mode: 'rewrite' | 'question' | 'suggestion'): Promise<any> {
 
-    const userPrompt = mode === 'rewrite'
-        ? `Please rewrite the following text to improve clarity and flow:\n\n${userInput}`
-        : userInput;
+    const systemPrompt = getSystemPrompt(mode);
+    const userPrompt = getUserPrompt(mode, userInput);
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
